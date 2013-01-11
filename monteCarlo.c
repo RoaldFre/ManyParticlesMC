@@ -51,12 +51,13 @@ static void *monteCarloTaskStart(void *initialData)
 
 	/* adjust boxsize to get the correct world size! */
 	double trueBoxSize = world.worldSize / nb;
-	printf("Requested boxsize %f, actual box size %f\n", mcc->boxSize, trueBoxSize);
+	printf("Requested boxsize %f, actual box size %f\n",
+						mcc->boxSize, trueBoxSize);
 	if (world.twoDimensional) {
-		printf("Allocating grid for 2D world with %d boxes per dim.\n", nb);
+		printf("Allocating grid for 2D world, %d boxes/dim.\n", nb);
 		allocGrid(nb, nb, 1, trueBoxSize);
 	} else {
-		printf("Allocating grid for 3D world with %d boxes per dim.\n", nb);
+		printf("Allocating grid for 3D world, %d boxes/dim.\n", nb);
 		allocGrid(nb, nb, nb, trueBoxSize);
 	}
 	
