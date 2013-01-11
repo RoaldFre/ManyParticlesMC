@@ -34,6 +34,7 @@ static bool render;
 static bool twoDimensional = false;
 static double packingDensity;
 static int numParticles;
+static int numBoxes = -1; /* guard */
 
 static void printUsage(void)
 {
@@ -41,6 +42,7 @@ static void printUsage(void)
 	printf("\n");
 	printf("Flags:\n");
 	printf(" -2        2D instead of 3D\n");
+	printf(" -b <num>  number of Boxes per dimension\n");
 	printf(" -r        Render\n");
 	printf(" -f <flt>  desired Framerate when rendering.\n");
 	printf("             default: %f)\n", DEF_RENDER_FRAMERATE);
@@ -50,7 +52,7 @@ static void parseArguments(int argc, char **argv)
 {
 	int c;
 
-	while ((c = getopt(argc, argv, ":2rf:")) != -1)
+	while ((c = getopt(argc, argv, ":2rf:b:")) != -1)
 	{
 		switch (c)
 		{
@@ -64,6 +66,9 @@ static void parseArguments(int argc, char **argv)
 			break;
 		case 'r':
 			render = true;
+			break;
+		case 'b':
+			numBoxes = atoi(optarg);
 			break;
 		case 'h':
 			printUsage();
@@ -119,6 +124,15 @@ int main(int argc, char **argv)
 	} else {
 		double volume = numParticles * SPHERE_VOLUME / packingDensity;
 		worldSize = cbrt(volume);
+	}
+	
+	if (numBoxes > 0) {
+		/* explicit number of boxes requested. */
+		monteCarloConfig.boxSize = worldSize / numBoxes;
+		if (monteCarloConfig.boxSize < 2*RADIUS)
+			die("Resulting boxsize %f less than particle "
+					"dameter %f!\n",
+					monteCarloConfig.boxSize, 2*RADIUS);
 	}
 
 	allocWorld(numParticles, worldSize, twoDimensional);
