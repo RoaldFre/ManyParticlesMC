@@ -18,9 +18,11 @@
 /* Defaults */
 #define DEF_MEASURE_FILE 		"data"
 #define DEF_RENDER_FRAMERATE 		30.0
+#define DEF_PAIR_CORRELATION_BINS 	1000
+#define DEF_DELTA		 	1
 #define RADIUS		 		0.5
 #define DISK_AREA 			(M_PI * SQUARE(RADIUS))
-#define SPHERE_VOLUME 			(4/3*M_PI * CUBE(RADIUS))
+#define SPHERE_VOLUME 			(4.0/3.0*M_PI * CUBE(RADIUS))
 
 
 /* Static global configuration variables */
@@ -31,15 +33,15 @@ static RenderConf renderConf = {
 };
 static MonteCarloConfig monteCarloConfig = {
 	.boxSize = 1, /* Particles have diameter 1 */
-	.delta = 1,
+	.delta = DEF_DELTA,
 };
 static MeasurementConf measConf = {
-	.measureTime = -1, /* Go on indefinitely */
-	.measureInterval = 100,
+	.measureTime = -1, /* Go on indefinitely. */
+	.measureInterval = -1, /* Don't measure by default. */
 	.measureWait = -1,
 	.measureFile = DEF_MEASURE_FILE,
 	.verbose = true,
-	.renderStrBufSize = 0, /* disable rendering */
+	.renderStrBufSize = 0, /* Disable rendering of strings. */
 	.renderStrX = 20,
 	.renderStrY = 20,
 	.measureHeader = NULL,
@@ -49,6 +51,7 @@ static bool twoDimensional = false;
 static double packingDensity;
 static int numParticles;
 static int numBoxes = -1; /* guard */
+static int pairCorrelationBins = DEF_PAIR_CORRELATION_BINS;
 
 static void printUsage(void)
 {
@@ -56,22 +59,46 @@ static void printUsage(void)
 	printf("\n");
 	printf("Flags:\n");
 	printf(" -2        2D instead of 3D\n");
+	printf(" -d <flt>  Delta to use in Monte Carlo algorithm\n");
+	printf("             default: %f\n", monteCarloConfig.delta);
+	printf(" -I <num>  sample Interval\n");
+	printf("             default: don't sample\n");
+	printf(" -P <num>  measurement Period\n");
+	printf("             default: sample indefinitely\n");
+	printf(" -B <num>  number of Bins for the pair correlation\n");
+	printf("             default: %d\n", pairCorrelationBins);
 	printf(" -b <num>  number of Boxes per dimension\n");
 	printf(" -r        Render\n");
 	printf(" -f <flt>  desired Framerate when rendering.\n");
 	printf("             default: %f)\n", DEF_RENDER_FRAMERATE);
+	printf("\n");
 }
 
 static void parseArguments(int argc, char **argv)
 {
 	int c;
 
-	while ((c = getopt(argc, argv, ":2rf:b:")) != -1)
+	while ((c = getopt(argc, argv, ":2d:I:P:rf:B:b:")) != -1)
 	{
 		switch (c)
 		{
 		case '2':
 			twoDimensional = true;
+			break;
+		case 'd':
+			monteCarloConfig.delta = atof(optarg);
+			if (monteCarloConfig.delta <= 0)
+				die("Invalid Monte Carlo delta %s\n", optarg);
+			break;
+		case 'I':
+			measConf.measureInterval = atoi(optarg);
+			if (measConf.measureInterval <= 0)
+				die("Invalid measurement interval %s\n", optarg);
+			break;
+		case 'P':
+			measConf.measureTime = atoi(optarg);
+			if (measConf.measureTime < 0)
+				die("Invalid measurement time %s\n", optarg);
 			break;
 		case 'f':
 			renderConf.framerate = atof(optarg);
@@ -80,6 +107,11 @@ static void parseArguments(int argc, char **argv)
 			break;
 		case 'r':
 			render = true;
+			break;
+		case 'B':
+			pairCorrelationBins = atoi(optarg);
+			if (pairCorrelationBins <= 0)
+				die("Invalid number of pair correlation bins %s\n", optarg);
 			break;
 		case 'b':
 			numBoxes = atoi(optarg);
@@ -158,9 +190,15 @@ int main(int argc, char **argv)
 	Task monteCarloTask = makeMonteCarloTask(&monteCarloConfig);
 
 	/* Measurement task */
+	PairCorrelationConfig pairCorrelationConf = {
+		.numBins = pairCorrelationBins,
+		.maxR = worldSize / 2,
+		.rho = numParticles / (twoDimensional ? SQUARE(worldSize)
+		                                      : CUBE(worldSize)),
+	};
 	Measurement measurement;
 	measurement.measConf = measConf;
-	measurement.sampler = trivialSampler();
+	measurement.sampler = pairCorrelationSampler(&pairCorrelationConf);
 	Task measTask = measurementTask(&measurement);
 
 	/* Combined task */
