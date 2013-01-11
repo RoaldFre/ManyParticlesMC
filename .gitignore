@@ -1,5 +1,6 @@
 *.o
 main
+data
 octave-core
 core
 tags

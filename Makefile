@@ -3,7 +3,7 @@ RENDER = yes
 
 DEFINES=-D_GNU_SOURCE
 
-OBJECTS = task.o system.o math.o world.o spgrid.o tinymt/tinymt64.o render.o octave.o monteCarlo.o
+OBJECTS = task.o system.o math.o world.o spgrid.o tinymt/tinymt64.o render.o octave.o monteCarlo.o measure.o samplers.o
 EXTRA_RENDER_OBJECTS = font.o mathlib/vector.o mathlib/quaternion.o mathlib/matrix.o
 
 LIBS = -lm

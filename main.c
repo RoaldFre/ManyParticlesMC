@@ -12,8 +12,11 @@
 #include "render.h"
 #include "math.h"
 #include "monteCarlo.h"
+#include "measure.h"
+#include "samplers.h"
 
 /* Defaults */
+#define DEF_MEASURE_FILE 		"data"
 #define DEF_RENDER_FRAMERATE 		30.0
 #define RADIUS		 		0.5
 #define DISK_AREA 			(M_PI * SQUARE(RADIUS))
@@ -29,6 +32,17 @@ static RenderConf renderConf = {
 static MonteCarloConfig monteCarloConfig = {
 	.boxSize = 1, /* Particles have diameter 1 */
 	.delta = 1,
+};
+static MeasurementConf measConf = {
+	.measureTime = -1, /* Go on indefinitely */
+	.measureInterval = 100,
+	.measureWait = -1,
+	.measureFile = DEF_MEASURE_FILE,
+	.verbose = true,
+	.renderStrBufSize = 0, /* disable rendering */
+	.renderStrX = 20,
+	.renderStrY = 20,
+	.measureHeader = NULL,
 };
 static bool render;
 static bool twoDimensional = false;
@@ -143,11 +157,18 @@ int main(int argc, char **argv)
 	/* Monte Carlo task */
 	Task monteCarloTask = makeMonteCarloTask(&monteCarloConfig);
 
+	/* Measurement task */
+	Measurement measurement;
+	measurement.measConf = measConf;
+	measurement.sampler = trivialSampler();
+	Task measTask = measurementTask(&measurement);
+
 	/* Combined task */
-	Task *tasks[2];
+	Task *tasks[3];
 	tasks[0] = (render ? &renderTask : NULL);
 	tasks[1] = &monteCarloTask;
-	Task task = sequence(tasks, 2);
+	tasks[2] = &measTask;
+	Task task = sequence(tasks, 3);
 
 	bool everythingOK = run(&task);
 

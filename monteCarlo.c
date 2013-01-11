@@ -35,7 +35,7 @@ static void fillWorld(void)
 }
 
 typedef struct {
-	double delta;
+	MonteCarloConfig conf;
 	long attempted; /* Attempted number of MC moves */
 	long accepted; /* Number of accepted MC moves */
 } MonteCarloState;
@@ -65,7 +65,7 @@ static void *monteCarloTaskStart(void *initialData)
 	fillWorld();
 
 	MonteCarloState *state = malloc(sizeof(*state));
-	state->delta = mcc->delta;
+	state->conf = *mcc;
 	state->attempted = 0;
 	state->accepted = 0;
 
@@ -78,17 +78,18 @@ static TaskSignal monteCarloTaskTick(void *state)
 {
 	assert(state != NULL);
 	MonteCarloState *mcs = (MonteCarloState*) state;
+	MonteCarloConfig *mcc = &mcs->conf;
 
-	assert(mcs->delta > 0);
+	assert(mcc->delta > 0);
 
 	for (int i = 0; i < world.numParticles; i++) {
 		Particle *p = &world.particles[randIndex(world.numParticles)];
 		Vec3 oldPos = p->pos;
 
-		p->pos.x += mcs->delta * (rand01() - 1/2.0);
-		p->pos.y += mcs->delta * (rand01() - 1/2.0);
+		p->pos.x += mcc->delta * (rand01() - 1/2.0);
+		p->pos.y += mcc->delta * (rand01() - 1/2.0);
 		if (!world.twoDimensional)
-			p->pos.z += mcs->delta * (rand01() - 1/2.0);
+			p->pos.z += mcc->delta * (rand01() - 1/2.0);
 
 		reboxParticle(p);
 
