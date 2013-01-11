@@ -272,6 +272,10 @@ static __inline__ Vec3 periodic(Vec3 period, Vec3 v)
 	res.y = hp.y + floor((v.y - hp.y) / period.y) * period.y;
 	res.z = hp.z + floor((v.z - hp.z) / period.z) * period.z;
 
+	assert(-period.x/2.0 <= res.x   &&   res.x < period.x/2.0);
+	assert(-period.y/2.0 <= res.y   &&   res.y < period.y/2.0);
+	assert(-period.z/2.0 <= res.z   &&   res.z < period.z/2.0);
+
 	return res;
 }
 

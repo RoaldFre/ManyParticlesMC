@@ -371,10 +371,11 @@ static bool forEveryNeighbourInBox(Particle *p, Box *neighbour,
 	return true;
 }
 
-static bool forEveryNeighbourBox(Particle *p, Box *b,
+static bool forEveryNeighbourBox(Particle *p,
 		bool (*f)(Particle *p1, Particle *p2, void *d), void *d)
 {
 	//TODO: be more smart/elegant
+	Box *b = p->myBox;
 
 	/* x-1 */
 	QUICK_BAIL(forEveryNeighbourInBox(p, b->prevX->prevY->nextZ, f, d));
@@ -436,7 +437,7 @@ bool forEveryNeighbourOfD(Particle *p,
 	assert(p2 == p);
 	
 	/* Every neighbour in neighbouring boxes */
-	return forEveryNeighbourBox(p, box, f, data);
+	return forEveryNeighbourBox(p, f, data);
 }
 
 static bool neighbourWrapper(Particle *p1, Particle *p2, void *data)
@@ -652,9 +653,9 @@ bool forEveryPairCheck(void)
 		 * this ONLY works when there are AT LEAST 3 boxes 
 		 * in each dimension! Hence the conditional di{x,y,z}'s 
 		 * below. */
-		for (int dix = (nbx>2 ? -1 : 0); dix <= (nby>1 ? 1 : 0); dix++)
-		for (int diy = (nby>2 ? -1 : 0); diy <= (nby>1 ? 1 : 0); diy++)
-		for (int diz = (nbz>2 ? -1 : 0); diz <= (nby>1 ? 1 : 0); diz++) {
+		for (int dix = (nbx>=3 ? -1 : 0); dix <= (nbx>=2 ? 1 : 0); dix++)
+		for (int diy = (nby>=3 ? -1 : 0); diy <= (nby>=2 ? 1 : 0); diy++)
+		for (int diz = (nbz>=3 ? -1 : 0); diz <= (nbz>=2 ? 1 : 0); diz++) {
 			Box *b = boxFromNonPeriodicIndex(
 					ix+dix, iy+diy, iz+diz);
 			if (b <= box)
@@ -694,6 +695,8 @@ static bool forEveryNeighbourOfCheckHelper(Particle *p1, Particle *p2,
 
 static bool forEveryNeighbourOfCheck(void)
 {
+	bool OK = true;
+
 	for (int ix = 0; ix < nbx; ix++)
 	for (int iy = 0; iy < nby; iy++)
 	for (int iz = 0; iz < nbz; iz++) {
@@ -702,9 +705,9 @@ static bool forEveryNeighbourOfCheck(void)
 		int particlesInAdjacentBoxes = 0;
 
 		/* Count all particles in adjacent boxes */
-		for (int dix = (nbx>2 ? -1 : 0); dix <= (nby>1 ? 1 : 0); dix++)
-		for (int diy = (nby>2 ? -1 : 0); diy <= (nby>1 ? 1 : 0); diy++)
-		for (int diz = (nbz>2 ? -1 : 0); diz <= (nby>1 ? 1 : 0); diz++) {
+		for (int dix = (nbx>=3 ? -1 : 0); dix <= (nbx>=2 ? 1 : 0); dix++)
+		for (int diy = (nby>=3 ? -1 : 0); diy <= (nby>=2 ? 1 : 0); diy++)
+		for (int diz = (nbz>=3 ? -1 : 0); diz <= (nbz>=2 ? 1 : 0); diz++) {
 			Box *b = boxFromNonPeriodicIndex(
 					ix+dix, iy+diy, iz+diz);
 			if (b == box)
@@ -732,17 +735,17 @@ static bool forEveryNeighbourOfCheck(void)
 			if (data.count != correctNeighbours) {
 				fprintf(stderr, "forEveryNeighbourOf ran "
 						"over %d neighbour(s), but "
-						"should be %d\n", 
-						data.count, 
-						correctNeighbours);
-				return false;
+						"should be %d (p %p, b %p)\n",
+						data.count, correctNeighbours,
+						(void*) p, (void*) box);
+				OK = false;
 			}
 
 			p = p->next;
 		}
 	}
 
-	return true;
+	return OK;
 }
 	
 
