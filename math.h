@@ -363,10 +363,16 @@ static __inline__ Vec3 fromCilindrical(double r, double phi, double height)
 	return res;
 }
 
-/* Returns a uniform random number x, where 0 <= x < 1 */
+/* Returns a uniform random number x, where 0 <= x < 1. */
 static __inline__ double rand01(void)
 {
 	return tinymt64_generate_double01(&tinymt);
+}
+
+/* Returns a unifor random index x, where 0 <= x < numElements. */
+static __inline__ int randIndex(int numElements)
+{
+	return (int) (numElements * rand01());
 }
 
 /* These are static *globals* so that inlining randNorm multiple times in a 

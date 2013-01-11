@@ -40,9 +40,6 @@ static void *monteCarloTaskStart(void *initialData)
 	assert(initialData != NULL);
 	MonteCarloConfig *mcc = (MonteCarloConfig*) initialData;
 
-	if (mcc->boxSize == 0)
-		die("Box size is zero!");
-
 	int nb = floor(world.worldSize / mcc->boxSize);
 
 	if (nb < 0)
@@ -63,24 +60,51 @@ static void *monteCarloTaskStart(void *initialData)
 	
 	fillWorld();
 
-	return NULL;
+	return mcc;
 }
 
+/* Perform a Monte Carlo sweep */
 static TaskSignal monteCarloTaskTick(void *state)
 {
-	UNUSED(state);
+	assert(state != NULL);
+	MonteCarloConfig *mcc = (MonteCarloConfig*) state;
+
+	for (int i = 0; i < world.numParticles; i++) {
+		Particle *p = &world.particles[randIndex(world.numParticles)];
+		Vec3 oldPos = p->pos;
+
+		p->pos.x += mcc->delta * (rand01() - 1/2.0);
+		p->pos.y += mcc->delta * (rand01() - 1/2.0);
+		if (!world.twoDimensional)
+			p->pos.z += mcc->delta * (rand01() - 1/2.0);
+
+		reboxParticle(p);
+
+		if (collides(p)) {
+			/* Back to old position! */
+			p->pos = oldPos;
+			reboxParticle(p);
+		}
+	}
+
 	return TASK_OK;
 }
 
 static void monteCarloTaskStop(void *state)
 {
-	UNUSED(state);
 	freeGrid();
+	free(state);
 }
 
 
 Task makeMonteCarloTask(MonteCarloConfig *mcc)
 {
+	if (mcc->boxSize <= 0)
+		die("Box size is zero (or negative)!\n");
+
+	if (mcc->delta <= 0)
+		die("MC delta is zero (or negative)!\n");
+
 	MonteCarloConfig *mccCopy = malloc(sizeof(*mccCopy));
 	memcpy(mccCopy, mcc, sizeof(*mccCopy));
 

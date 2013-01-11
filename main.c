@@ -28,6 +28,7 @@ static RenderConf renderConf = {
 };
 static MonteCarloConfig monteCarloConfig = {
 	.boxSize = 1, /* Particles have diameter 1 */
+	.delta = 1,
 };
 static bool render;
 static bool twoDimensional = false;
