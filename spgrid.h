@@ -48,17 +48,6 @@ bool forEveryNeighbourOf(Particle *p, bool (*f)(Particle *p1, Particle *p2));
 void forEveryPairD(void (*f)(Particle *p1, Particle *p2, void *data), void *data);
 void forEveryPair(void (*f)(Particle *p1, Particle *p2));
 
-/* Runs over all connections of particles that are within the same box, or 
- * in adjacent boxes. The first connection is from particle a1 to a2, the 
- * second is from b1 to b2. It is guaranteed that
- *    a2 == getConnectedParticle(a1)
- *    b2 == getConnectedParticle(b1)
- */
-void forEveryConnectionPairD(void (*f)(Particle *a1, Particle *a2,
-		Particle *b1, Particle *b2, void *data), void *data);
-void forEveryConnectionPair(void (*f)(Particle *a1, Particle *a2, 
-		Particle *b1, Particle *b2));
-
 /* Check whether internal structure is still consistent. If checkCorrectBox 
  * is true, then also check if all particles are in their correct boxes.
  * This check also does a forEveryPairCheck. */
@@ -69,8 +58,6 @@ bool spgridSanityCheck(bool checkCorrectBox);
  * not explicitly test if we do *all* pairs, nor that we don't do doubles.
  * Returns true if everything is OK, false otherwise. */
 bool forEveryPairCheck(void);
-/* Analogous to forEveryPairCheck() */
-bool forEveryConnectionPairCheck(void);
 
 /* Returns the shortest vector that points from v1 to v2, taking into 
  * account the periodic boundary conditions. 
