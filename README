@@ -1,0 +1,6 @@
+Monte Carlo version of 'Many Particles'.
+
+Uses updated space partitioning code and task framework from my DNA 
+project.
+
+Author: Roald Frederickx <roald.frederickx@gmail.com>
