@@ -26,4 +26,7 @@ void freeWorld(void);
 void forEveryParticle(void (*f)(Particle *p));
 void forEveryParticleD(void (*f)(Particle *p, void *data), void *data);
 
+/* loop over ALL possible pairs in the world. */
+void forEVERYpairD(void (*f)(Particle *p1, Particle *p2, void *data),
+		void *data);
 #endif

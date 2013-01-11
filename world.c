@@ -34,3 +34,13 @@ void forEveryParticleD(void (*f)(Particle *p, void *data), void *data)
 		f(&world.particles[p], data);
 }
 
+
+/* loop over ALL possible pairs in the world. */
+void forEVERYpairD(void (*f)(Particle *p1, Particle *p2, void *data),
+		void *data)
+{
+	for (int p1 = 0; p1 < world.numParticles; p1++)
+		for (int p2 = p1+1; p2 < world.numParticles; p2++)
+			f(&world.particles[p1], &world.particles[p2], data);
+}
+
