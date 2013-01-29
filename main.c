@@ -65,6 +65,8 @@ static void printUsage(void)
 	printf("             default: don't sample\n");
 	printf(" -P <num>  measurement Period\n");
 	printf("             default: sample indefinitely\n");
+	printf(" -D <path> Data file for the measurement\n");
+	printf("             default: %s\n", DEF_MEASURE_FILE);
 	printf(" -B <num>  number of Bins for the pair correlation\n");
 	printf("             default: %d\n", pairCorrelationBins);
 	printf(" -b <num>  number of Boxes per dimension\n");
@@ -78,7 +80,7 @@ static void parseArguments(int argc, char **argv)
 {
 	int c;
 
-	while ((c = getopt(argc, argv, ":2d:I:P:rf:B:b:")) != -1)
+	while ((c = getopt(argc, argv, ":2d:I:P:D:rf:B:b:")) != -1)
 	{
 		switch (c)
 		{
@@ -99,6 +101,9 @@ static void parseArguments(int argc, char **argv)
 			measConf.measureTime = atoi(optarg);
 			if (measConf.measureTime < 0)
 				die("Invalid measurement time %s\n", optarg);
+			break;
+		case 'D':
+			measConf.measureFile = optarg;
 			break;
 		case 'f':
 			renderConf.framerate = atof(optarg);
